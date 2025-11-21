@@ -24,7 +24,7 @@ export function startREPL() {
         const command = commands[commandStr];
 
         if (!command) {
-            console.log("Unknown command");
+            console.log("Unknown command! Type 'help' to list available commands.");
             rl.prompt();
             return;
         }
