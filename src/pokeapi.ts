@@ -1,4 +1,4 @@
-import { Cache } from "./pokecache";
+import { Cache } from "./pokecache.js";
 
 const REAP_INTERVAL = 1000; // in milliseconds
 
@@ -24,6 +24,20 @@ export class PokeAPI {
         return locationData;
     }
 
+    async fetchLocation(locationAreaName: string): Promise<LocationPokemons> {
+        const fullURL = `${PokeAPI.baseURL}/location-area/${locationAreaName}`;
+
+        const cachedPokemonData = this.#cache.get(fullURL);
+        if (cachedPokemonData) {
+            return cachedPokemonData as LocationPokemons;
+        }
+
+        const res = await fetch(fullURL);
+        const locationPokemons = (await res.json()) as LocationPokemons;
+        this.#cache.add(fullURL, locationPokemons);
+        return locationPokemons;
+    }
+
     stopCache() {
         this.#cache.stopReapLoop();
     }
@@ -36,5 +50,15 @@ export type ShallowLocations = {
     results: {
         name: string;
         url: string;
+    }[];
+};
+
+export type LocationPokemons = {
+    id: number;
+    name: string;
+    pokemon_encounters: {
+        pokemon: {
+            name: string;
+        };
     }[];
 };
