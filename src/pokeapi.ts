@@ -13,29 +13,33 @@ export class PokeAPI {
     async fetchLocations(pageURL?: string): Promise<ShallowLocations> {
         const fullURL = pageURL || `${PokeAPI.baseURL}/location-area`;
 
-        const cachedLocationData = this.#cache.get(fullURL);
-        if (cachedLocationData) {
-            return cachedLocationData as ShallowLocations;
-        }
-
-        const res = await fetch(fullURL);
-        const locationData = (await res.json()) as ShallowLocations;
-        this.#cache.add(fullURL, locationData);
-        return locationData;
+        return (await this.#retrieveOrFetch(fullURL)) as ShallowLocations;
     }
 
     async fetchLocation(locationAreaName: string): Promise<LocationPokemons> {
         const fullURL = `${PokeAPI.baseURL}/location-area/${locationAreaName}`;
 
-        const cachedPokemonData = this.#cache.get(fullURL);
-        if (cachedPokemonData) {
-            return cachedPokemonData as LocationPokemons;
-        }
+        return (await this.#retrieveOrFetch(fullURL)) as LocationPokemons;
+    }
 
+    async fetchPokemonData(pokemonName: string): Promise<Pokemon> {
+        const fullURL = `${PokeAPI.baseURL}/pokemon/${pokemonName}`;
+
+        return (await this.#retrieveOrFetch(fullURL)) as Pokemon;
+    }
+
+    async #retrieveOrFetch(fullURL: string): Promise<unknown> {
+        const cachedData = this.#cache.get(fullURL);
+        if (cachedData) {
+            return cachedData;
+        }
         const res = await fetch(fullURL);
-        const locationPokemons = (await res.json()) as LocationPokemons;
-        this.#cache.add(fullURL, locationPokemons);
-        return locationPokemons;
+        if (res.status === 404) {
+            throw new Error("Not found");
+        }
+        const result = await res.json();
+        this.#cache.add(fullURL, result);
+        return result;
     }
 
     stopCache() {
@@ -61,4 +65,17 @@ export type LocationPokemons = {
             name: string;
         };
     }[];
+};
+
+export type Pokemon = {
+    id: number;
+    name: string;
+    base_experience: number;
+    height: number;
+    weight: number;
+    stats: {
+        base_stat: number;
+        stat: { name: string };
+    }[];
+    types: { type: { name: string } }[];
 };

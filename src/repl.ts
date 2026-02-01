@@ -32,7 +32,11 @@ export async function startREPL(state: State) {
         try {
             await command.callback(state, ...words.slice(1));
         } catch (error) {
-            console.log(error);
+            if (error instanceof Error) {
+                console.log(error.message);
+            } else {
+                console.log(error);
+            }
         }
 
         rl.prompt();
